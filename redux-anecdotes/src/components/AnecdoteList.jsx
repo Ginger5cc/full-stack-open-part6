@@ -1,39 +1,52 @@
 import { useSelector, useDispatch } from 'react-redux'
-import { addVote } from '../reducers/anecdoteReducer'
+import { addNewVote } from '../reducers/anecdoteReducer'
+import {  } from '../reducers/anecdoteReducer'
+import { createSelector } from 'reselect'
+import { setNotification} from '../reducers/notificationReducer'
+
 
 const AnecdoteList = () => {
   const dispatch = useDispatch()
-  const anecdotes = useSelector(state => {
-    const filter = state.filter
-    console.log('filter is ', filter)
-    state.anecdotes.sort((a,b) => b.votes - a.votes)
-    console.log(state)
-    if (filter === '') 
-      return state.anecdotes
-      else return (
-    state.anecdotes.filter(n=> n.content.toLowerCase().includes(filter))
-  )
-  })
+
+  //try to use createSelector
+    const memorizedAnecdotes = createSelector(
+    [state => state.filter, state => state.anecdotes],
+    (filter, anecdote) => {return anecdote.filter(n=> n.content.toLowerCase().includes(filter))
+      .sort((a,b) => b.votes - a.votes)
+    }
+  ) 
   
-  const vote = (id) => {
-      dispatch(addVote(id))
+  const aa = useSelector(state => memorizedAnecdotes(state))
+  //console.log('aa is', aa)
+  
+  const vote = (id, content) => {
+      dispatch(addNewVote(id))
+      dispatch(setNotification(`you voted '${content}'`, 5000))
     }
   
-    return (
+  return (
+    <div>
+    {aa.map(anecdote =>
+    <div key={anecdote.id}>
       <div>
-      {anecdotes.map(anecdote =>
-      <div key={anecdote.id}>
-        <div>
-          {anecdote.content}
-        </div>
-        <div>
-          has {anecdote.votes}
-          <button onClick={() => vote(anecdote.id)}>vote</button>
-        </div>
+        {anecdote.content}
       </div>
-        )}
+      <div>
+        has {anecdote.votes}
+        <button onClick={() => vote(anecdote.id, anecdote.content)}>vote</button>
       </div>
-    )
+    </div>
+      )}
+    </div>
+  )
 }
 
+
+/* try to use connect
+  const mapStateToProps = (state) => {
+    return {
+        filter: state.filter,
+        anecdotes: state.anecdotes,
+    }   
+} connect(mapStateToProps)()*/
 export default AnecdoteList
